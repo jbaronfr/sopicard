@@ -1,0 +1,575 @@
+// Pico CSS stays a plain-CSS @import: Sass passes .css imports through
+// verbatim and Vite inlines them at build time (same as before).
+@import "@picocss/pico/css/pico.min.css";
+
+/* ============================================================
+   Sopicard — flip business card
+   All card metrics are in cqi (1% of the card width), so type
+   and spacing scale perfectly at any size/orientation.
+   ============================================================ */
+
+// ---------- compile-time tokens ----------
+// Runtime theme (accent, backgrounds) arrives as CSS custom properties
+// from Document.tsx — only hard-coded colors live here.
+$ink: #17171c;
+$muted-ink: #5b5b66;
+$paper: #f2f2f5;
+$muted-paper: #a1a1ae;
+$surface-dark: #17171f;
+$white: #fff;
+$line-light: rgb(23 23 28 / 10%);
+$line-dark: rgb(242 242 245 / 12%);
+$shadow-card:
+  0 30px 60px -20px rgb(0 0 0 / 40%),
+  0 8px 20px -8px rgb(0 0 0 / 28%);
+$shadow-avatar: 0 4px 14px -4px rgb(0 0 0 / 35%);
+$shadow-qr: 0 4px 14px -6px rgb(0 0 0 / 35%);
+$shadow-accent: 0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+$lift: 0.15s ease;
+
+// ---------- mixins ----------
+@mixin pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+@mixin accent-pill {
+  @include pill;
+
+  font-weight: 700;
+  color: $white;
+  background: var(--accent);
+  border: none;
+  box-shadow: $shadow-accent;
+  white-space: nowrap;
+  transition:
+    transform $lift,
+    filter $lift;
+
+  &:hover {
+    color: $white;
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+
+// ---------- theme custom properties ----------
+:root {
+  --pico-font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --pico-primary: var(--accent);
+  --pico-primary-hover: var(--accent);
+  --pico-primary-focus: var(--accent);
+  --pico-primary-inverse: #fff;
+  --pico-background-color: var(--bg-light);
+  --pico-color: #{$ink};
+  --pico-muted-color: #{$muted-ink};
+  --pico-border-radius: 0.5rem;
+  --pico-form-element-focus-color: var(--accent);
+  --surface: #{$white};
+  --text: #{$ink};
+  --muted: #{$muted-ink};
+  --line: #{$line-light};
+  --bg: var(--bg-light);
+  --card-radius: clamp(10px, 4.2cqi, 24px);
+
+  @media (prefers-color-scheme: dark) {
+    --pico-background-color: var(--bg-dark);
+    --pico-color: #{$paper};
+    --pico-muted-color: #{$muted-paper};
+    --surface: #{$surface-dark};
+    --text: #{$paper};
+    --muted: #{$muted-paper};
+    --line: #{$line-dark};
+    --bg: var(--bg-dark);
+  }
+}
+
+// ---------- base ----------
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: clip; /* never any scrollbar, screen or print-preview quirks */
+  background:
+    radial-gradient(
+      55% 45% at 18% 8%,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 40% at 85% 92%,
+      color-mix(in srgb, var(--accent) 10%, transparent),
+      transparent 70%
+    ),
+    var(--bg);
+  color: var(--text);
+}
+
+#app {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.5rem, 2vmin, 1.5rem);
+}
+
+.page {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.5rem, 2vmin, 1rem);
+}
+
+/* ---------- scene: adaptive sizing, no scrollbars ----------
+   Landscape (desktop): real-card proportions (ISO 7810 ID-1,
+   85.6 x 54), capped so it reads as a physical card.
+   Portrait (phones): the card rotates to portrait and fills
+   the screen. Width is always clamped by both axes so the
+   card + hint can never overflow the viewport. */
+.scene {
+  --ratio: 85.6 / 54;
+
+  container-type: inline-size;
+  perspective: 1600px;
+
+  /* sized from viewport units, not the parent, so it never collapses */
+  width: min(92vw, calc((100dvh - 4.5rem) * (85.6 / 54)), 620px);
+
+  @media (orientation: portrait) {
+    width: min(92vw, calc((100dvh - 5rem) * (54 / 85.6)), 400px);
+  }
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ratio);
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.21, 1);
+
+  @media (orientation: portrait) {
+    aspect-ratio: calc(54 / 85.6);
+  }
+
+  &.is-flipped {
+    transform: rotateY(180deg);
+  }
+}
+
+/* ---------- faces ---------- */
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3cqi;
+  padding: 5.5cqi;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--accent) 9%, var(--surface)),
+    var(--surface) 45%
+  );
+  box-shadow: $shadow-card;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: clip;
+  cursor: pointer;
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+/* ---------- front ---------- */
+.front-top {
+  display: flex;
+  align-items: center;
+  gap: 4cqi;
+  min-width: 0;
+}
+
+.avatar {
+  width: 17cqi;
+  height: 17cqi;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: $shadow-avatar;
+  object-fit: cover;
+}
+
+.identity {
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    font-size: clamp(15px, 7cqi, 40px);
+    line-height: 1.05;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+    color: var(--text);
+  }
+}
+
+.role {
+  margin: 1cqi 0 0;
+  font-size: clamp(10px, 4.1cqi, 21px);
+  color: var(--muted);
+}
+
+.location {
+  margin: 0.6cqi 0 0;
+  font-size: clamp(9px, 3.4cqi, 17px);
+  color: var(--muted);
+}
+
+.bio {
+  margin: 2.5cqi 0 0;
+  font-size: clamp(10px, 3.6cqi, 18px);
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 58ch;
+}
+
+.front-bottom {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* ---------- back ---------- */
+.back-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqi;
+}
+
+.back-title {
+  font-size: clamp(10px, 3.6cqi, 18px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.back-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 4cqi;
+  align-items: stretch;
+}
+
+.links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
+  gap: 1.6cqi;
+  align-content: center;
+}
+
+/* narrow (portrait) cards: stack links above the QR / save-contact row */
+@container (max-width: 480px) {
+  .links {
+    grid-template-columns: 1fr;
+  }
+
+  .link-main {
+    font-size: clamp(10px, 3.4cqi, 16px);
+  }
+
+  .back-body {
+    flex-direction: column;
+  }
+
+  .back-side {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .qr-box {
+    width: 19cqi;
+  }
+}
+
+.link-row {
+  display: flex;
+  min-width: 0;
+}
+
+.link-main {
+  @include pill;
+
+  flex: 1;
+  min-width: 0;
+  gap: 1.2cqi;
+  padding: 1.4cqi 2cqi;
+  font-size: clamp(10px, 2.3cqi, 14px);
+  font-weight: 600;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--line);
+  transition:
+    border-color $lift,
+    background $lift,
+    transform $lift;
+
+  &:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  svg {
+    font-size: 1.15em;
+    color: var(--accent);
+    flex: none;
+  }
+}
+
+.link-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-copy {
+  @include pill;
+
+  flex: none;
+  justify-content: center;
+  width: 6cqi;
+  min-width: 24px;
+  margin-left: 1cqi;
+  font-size: clamp(9px, 2.8cqi, 15px);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  transition:
+    color $lift,
+    border-color $lift;
+
+  &:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+.back-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqi;
+}
+
+.qr-box {
+  width: 19cqi;
+  aspect-ratio: 1;
+  padding: 2.2cqi;
+  background: $white; /* always light for scannability */
+  border-radius: 2cqi;
+  box-shadow: $shadow-qr;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.vcard-btn {
+  @include accent-pill;
+
+  gap: 1.4cqi;
+  padding: 1.5cqi 2.6cqi;
+  font-size: clamp(9px, 3cqi, 16px);
+  text-decoration: none;
+}
+
+/* ---------- buttons / focus ---------- */
+.flip-btn {
+  @include accent-pill;
+
+  gap: 1.4cqi;
+  padding: 1.8cqi 3.4cqi;
+  font-size: clamp(9px, 3.4cqi, 17px);
+  font-family: inherit;
+}
+
+.flip-back {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+button,
+a {
+  &:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- hint ---------- */
+.hint {
+  margin: 0;
+  font-size: clamp(11px, 1.6vmin, 14px);
+  color: var(--muted);
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- short landscape screens (phones): compact the card ---------- */
+@media (orientation: landscape) and (height <= 500px) {
+  .face {
+    padding: 4cqi;
+    gap: 2cqi;
+  }
+
+  .bio {
+    display: none;
+  }
+
+  .avatar {
+    width: 13cqi;
+    height: 13cqi;
+  }
+
+  .qr-box {
+    width: 20cqi;
+  }
+}
+
+/* ---------- reduced motion: crossfade instead of 3D flip ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .link-main,
+  .vcard-btn,
+  .flip-btn {
+    transition: none;
+  }
+
+  .card.is-flipped {
+    transform: none;
+
+    .front {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .back {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  .back {
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .face {
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* ---------- print: real business card, both sides on 2 pages ----------
+   ISO 7810 ID-1: 85.6mm x 54mm, no margins. Front prints on page 1,
+   back on page 2. Colors are kept exact for brand accuracy. */
+@media print {
+  @page {
+    size: 85.6mm 54mm;
+    margin: 0;
+  }
+
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+
+  body {
+    background: $white;
+  }
+
+  #app {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .page {
+    display: block;
+  }
+
+  .scene {
+    width: 85.6mm;
+    max-width: none;
+    perspective: none;
+  }
+
+  .card {
+    aspect-ratio: auto;
+    height: 54mm;
+    transform: none !important;
+    transition: none;
+  }
+
+  .face {
+    position: relative;
+    inset: auto;
+    height: 54mm;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    backface-visibility: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .back {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    break-before: page;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

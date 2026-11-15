@@ -1,0 +1,45 @@
+{
+  "name": "sopicard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A professional, printable, flip-animated digital business card. SolidBase + SolidJS + Pico CSS. Edit card.config.ts and deploy.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run lint:js && npm run lint:css && npm run format:check && npm run typecheck",
+    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix && npm run format",
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint . --fix",
+    "lint:css": "stylelint \"src/**/*.scss\"",
+    "lint:css:fix": "stylelint \"src/**/*.scss\" --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@kobalte/solidbase": "^3.0.0",
+    "@picocss/pico": "^2.1.1",
+    "@solidjs/router": "^2.0.0-next.37",
+    "@solidjs/web": "^2.0.0-rc.16",
+    "solid-js": "^2.0.0-rc.16"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@solidjs/vite-plugin": "^3.0.0-next.47",
+    "@types/qrcode": "^1.5.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-solid": "^0.19.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "qrcode": "^1.5.4",
+    "sass": "^1.108.2",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2",
+    "vite": "^8.0.0"
+  }
+}
