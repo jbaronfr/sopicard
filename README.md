@@ -33,6 +33,7 @@ npm install
 npm run dev      # vite dev server
 npm run build    # full SSG: prerenders every page into dist/client, no server bundle
 npm run preview  # serve the built static site
+npm test         # component tests (vitest + @solidjs/testing-library, also runs in CI)
 npm run lint     # lint phase: ESLint + Stylelint + Prettier + tsc (also runs in CI before deploy)
 npm run lint:fix # auto-fix everything fixable
 ```
@@ -60,6 +61,17 @@ It enforces frontend best practices with:
 
 `npm run lint:fix` auto-fixes everything that is fixable (ESLint `--fix`, Stylelint `--fix`,
 Prettier `--write`).
+
+## Testing
+
+`npm test` runs the component tests with **vitest** and **@solidjs/testing-library**
+(the official stack from the Solid testing guide — `@solidjs/vite-plugin` injects the
+Solid/vitest wiring automatically). The suite lives in `src/components/Card.test.tsx`
+and locks in the behaviour that matters most here: the flip interaction (`inert` moving
+between faces, focus transfer to the revealed face), the copy-to-clipboard flow, the vCard
+download link, and the anti-scraping guarantee — the rendered DOM must never contain
+`mailto:`, `tel:` or the raw address. Tests run against a shape-typed fake card
+(`src/test/mock-card.ts`), so they never touch your real contact data.
 
 ## Features
 

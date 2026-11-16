@@ -1,4 +1,4 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, For, onSettled } from "solid-js";
 import card from "virtual:sopicard";
 
 /* Inline SVG icon set — zero network requests. stroke-based (lucide-style paths). */
@@ -69,6 +69,12 @@ function displayOf(link: (typeof card.links)[number]): string {
 function LinkRow(props: { link: (typeof card.links)[number] }) {
   const [copied, setCopied] = createSignal(false);
 
+  // Pending "copied" reset timer. onSettled registers the component's
+  // disposal cleanup (the Solid 2.0 replacement for onMount/onCleanup pairs),
+  // so a row that goes away can never write into an unmounted owner.
+  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+  onSettled(() => () => clearTimeout(copiedTimer));
+
   const open = () => {
     const t = targetOf(props.link);
     if (props.link.kind === "url") window.open(t, "_blank", "noopener,noreferrer");
@@ -89,7 +95,8 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       ta.remove();
     }
     setCopied(true);
-    setTimeout(setCopied, 1600, false);
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(setCopied, 1600, false);
   };
 
   // [role=group] is Pico's joined-button pair: the two .outline buttons share
@@ -172,10 +179,10 @@ export default function Card() {
   // Horizontal swipe flips too: left -> back, right -> front.
   let touchX = 0;
   const onTouchStart = (e: TouchEvent) => {
-    touchX = e.changedTouches[0].clientX;
+    touchX = e.changedTouches.item(0)?.clientX ?? 0;
   };
   const onTouchEnd = (e: TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - touchX;
+    const dx = (e.changedTouches.item(0)?.clientX ?? touchX) - touchX;
     if (Math.abs(dx) > 40) flip(dx < 0);
   };
 
@@ -190,7 +197,7 @@ export default function Card() {
       <div class="scene">
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only convenience: clicking anywhere flips the card; keyboard users use the dedicated flip buttons */}
         <div
-          class={`card${flipped() ? " is-flipped" : ""}`}
+          class={["card", { "is-flipped": flipped() }]}
           onClick={onCardClick}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
@@ -203,7 +210,7 @@ export default function Card() {
             itemtype="https://schema.org/Person"
             aria-label={`Business card front: ${card.name}, ${card.role}`}
             aria-hidden={flipped() ? "true" : "false"}
-            inert={flipped() || undefined}
+            inert={flipped()}
           >
             <div class="grid">
               {card.avatar.type === "image" ? (
@@ -275,7 +282,7 @@ export default function Card() {
             class="face back"
             aria-label="Business card back: contact links, QR code and save-contact"
             aria-hidden={flipped() ? "false" : "true"}
-            inert={!flipped() || undefined}
+            inert={!flipped()}
           >
             {/* Top row mirrors the front's .grid: QR top-left where the
                 avatar sits, save-contact + flip-back pinned top right. */}

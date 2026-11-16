@@ -33,8 +33,8 @@ export default antfu(
     jsx: { a11y: true },
     stylistic: false,
     formatters: false,
-    // no test framework in this project
-    test: false,
+    // vitest rules for *.test.ts(x) files (see vitest.config.ts)
+    test: true,
     ignores: ["public/generated/**"],
   },
   sonarjs.configs.recommended,

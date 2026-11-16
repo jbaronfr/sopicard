@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       # Lint gate: ESLint (TS + Solid + a11y) + Stylelint + Prettier + tsc.
       - run: npm run lint
+      # Component tests — vitest detects CI and runs once (no watch).
+      - run: npm test
       # For a project site (https://<user>.github.io/<repo>/) the app must be
       # served under /<repo>/. For a user site or custom domain, leave "/".
       - run: npm run build

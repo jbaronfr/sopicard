@@ -90,8 +90,16 @@ const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><d
 fs.writeFileSync(path.join(genDir, "og.svg"), ogSvg, "utf8");
 
 /* --- normalized links for the client (no raw mailto:/tel: in HTML) --- */
-const DEFAULT_ICONS: Record<string, string> = { email: "mail", phone: "phone", url: "globe" };
-const DEFAULT_LABELS: Record<string, string> = { email: "Email", phone: "Call", url: "Link" };
+const DEFAULT_ICONS: Record<CardLink["kind"], string> = {
+  email: "mail",
+  phone: "phone",
+  url: "globe",
+};
+const DEFAULT_LABELS: Record<CardLink["kind"], string> = {
+  email: "Email",
+  phone: "Call",
+  url: "Link",
+};
 interface NormalizedLink {
   kind: CardLink["kind"];
   label: string;
@@ -202,7 +210,7 @@ function stripServerBundle(): Plugin {
         fs.rmSync(serverOut, { recursive: true, force: true });
         // vite manifest is only consumed by the server bundle
         fs.rmSync(path.join(process.cwd(), "dist/client/.vite"), { recursive: true, force: true });
-        builder.environments.client.logger.info(
+        builder.environments.client?.logger.info(
           `[sopicard] removed server bundle — dist/client is a pure static site`,
         );
       },
@@ -227,7 +235,9 @@ export default defineConfig({
       description: person.bio ?? `${personLine}. Digital business card.`,
       siteUrl,
       lang,
-      robots: true,
+      // robots.txt is hand-maintained in public/ — keep SolidBase's generated
+      // one (which references the sitemap we don't emit) from clobbering it.
+      robots: false,
       sitemap: false,
       llms: false,
       prerender: true, // full SSG into dist/client

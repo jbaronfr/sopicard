@@ -5,10 +5,11 @@
     "jsxImportSource": "@solidjs/web",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["vite/client"],
+    "types": ["vite/client", "@testing-library/jest-dom"],
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src", "theme", "card.config.ts", "vite.config.ts"]
+  "include": ["src", "theme", "card.config.ts", "vite.config.ts", "vitest.config.ts"]
 }
