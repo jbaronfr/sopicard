@@ -118,9 +118,14 @@ body {
 
 /* ---------- back layout ----------
    The top row mirrors the front's .grid, so the QR sits exactly where the
-   avatar sits on the front; save-contact is pinned to the top right. */
-.save {
+   avatar sits on the front; the right column holds save-contact with
+   flip-back underneath, both pinned to the right edge. Children stretch to
+   the column width, so flip-back is exactly as wide as save-contact (the
+   widest child defines the shrink-wrapped column). */
+.side {
   place-self: start end;
+  display: grid;
+  gap: var(--pico-spacing);
 }
 
 // Contact buttons in a fixed 2-column grid of Pico [role=group] rows.
@@ -134,16 +139,19 @@ body {
   }
 }
 
-// Copy button: fixed square with a centered icon; the open button next to it
-// takes the rest of the row width.
-.copy {
-  flex: none;
+// Copy button: a fixed square with a centered icon, so it always wins over
+// Pico's [role=group] > * { flex: auto } and stays square; the open button
+// next to it takes the rest of the row width.
+[role="group"] > .copy {
+  flex: 0 0 auto;
   align-self: center;
   width: 2.5rem;
   height: 2.5rem;
+  aspect-ratio: 1;
   padding: 0;
   display: inline-flex;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
 }
 
 // ---------- utilities ----------

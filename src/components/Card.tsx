@@ -155,13 +155,13 @@ export default function Card() {
   // The hint is shown until the card has been flipped once.
   const [hasFlipped, setHasFlipped] = createSignal(false);
   let frontBtn: HTMLButtonElement | undefined;
-  let backFace: HTMLElement | undefined;
+  let backBtn: HTMLButtonElement | undefined;
 
   const flip = (to: boolean) => {
     setFlipped(to);
     setHasFlipped(true);
-    // Move focus onto the newly revealed face for keyboard users.
-    queueMicrotask(() => (to ? backFace : frontBtn)?.focus({ preventScroll: true }));
+    // Move focus to the newly revealed face's flip button for keyboard users.
+    queueMicrotask(() => (to ? backBtn : frontBtn)?.focus({ preventScroll: true }));
   };
 
   // Clicking/tapping the card itself (outside buttons/links) also flips it.
@@ -188,7 +188,7 @@ export default function Card() {
       {card.bio && <meta itemprop="description" content={card.bio} />}
 
       <div class="scene">
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only convenience: clicking anywhere flips the card; keyboard users use the flip button on the front face */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only convenience: clicking anywhere flips the card; keyboard users use the dedicated flip buttons */}
         <div
           class={`card${flipped() ? " is-flipped" : ""}`}
           onClick={onCardClick}
@@ -272,25 +272,29 @@ export default function Card() {
 
           {/* ------------------------- BACK -------------------------- */}
           <article
-            ref={backFace}
             class="face back"
-            tabindex="-1"
             aria-label="Business card back: contact links, QR code and save-contact"
             aria-hidden={flipped() ? "false" : "true"}
             inert={!flipped() || undefined}
           >
             {/* Top row mirrors the front's .grid: QR top-left where the
-                avatar sits, save-contact pinned to the top right. */}
+                avatar sits, save-contact + flip-back pinned top right. */}
             <div class="grid">
               <figure class="qr" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
-              <a
-                role="button"
-                class="save"
-                href={`${base}generated/contact.vcf`}
-                download="contact.vcf"
-              >
-                <Icon name="vcard" /> Save contact
-              </a>
+              <div class="side">
+                <a role="button" href={`${base}generated/contact.vcf`} download="contact.vcf">
+                  <Icon name="vcard" /> Save contact
+                </a>
+                <button
+                  ref={backBtn}
+                  type="button"
+                  class="secondary outline no-print"
+                  aria-pressed={flipped() ? "true" : "false"}
+                  onClick={() => flip(false)}
+                >
+                  <Icon name="flip" /> Flip back
+                </button>
+              </div>
             </div>
 
             <div class="links">
