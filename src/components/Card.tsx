@@ -8,7 +8,7 @@ const ICONS: Record<string, string> = {
   phone:
     '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
   globe:
-    '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0-20"/><path d="M2 12h20"/>',
   github:
     '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
   linkedin:
@@ -94,7 +94,7 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
     <li class="link-row">
       <button
         type="button"
-        class="link-main"
+        class="outline link-main"
         onClick={open}
         aria-label={`${props.link.label} — open`}
       >
@@ -103,7 +103,7 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       </button>
       <button
         type="button"
-        class="link-copy"
+        class="outline"
         onClick={copy}
         aria-label={`Copy ${props.link.label.toLowerCase()} to clipboard`}
       >
@@ -189,7 +189,7 @@ export default function Card() {
           onTouchEnd={onTouchEnd}
         >
           {/* ------------------------- FRONT ------------------------- */}
-          <section
+          <article
             class="face front"
             itemprop="mainEntity"
             itemscope
@@ -210,42 +210,49 @@ export default function Card() {
               ) : (
                 <MonogramAvatar />
               )}
-              <div class="identity">
+              <div>
                 <h1 itemprop="name">{card.name}</h1>
-                <p class="role">
-                  <span itemprop="jobTitle">{card.role}</span>
-                  {card.company && (
-                    <>
-                      {" · "}
-                      <span
-                        itemprop="worksFor"
-                        itemscope
-                        itemtype="https://schema.org/Organization"
-                      >
-                        <span itemprop="name">{card.company}</span>
-                      </span>
-                    </>
-                  )}
+                <p>
+                  <small>
+                    <span itemprop="jobTitle">{card.role}</span>
+                    {card.company && (
+                      <>
+                        {" · "}
+                        <span
+                          itemprop="worksFor"
+                          itemscope
+                          itemtype="https://schema.org/Organization"
+                        >
+                          <span itemprop="name">{card.company}</span>
+                        </span>
+                      </>
+                    )}
+                  </small>
                 </p>
                 {card.location && (
-                  <p class="location">
-                    <span itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
-                      <span itemprop="addressLocality">{card.location}</span>
-                    </span>
+                  <p>
+                    <small>
+                      <span
+                        itemprop="address"
+                        itemscope
+                        itemtype="https://schema.org/PostalAddress"
+                      >
+                        <span itemprop="addressLocality">{card.location}</span>
+                      </span>
+                    </small>
                   </p>
                 )}
               </div>
             </div>
             {card.bio && (
-              <p class="bio" itemprop="description">
-                {card.bio}
+              <p class="bio">
+                <small itemprop="description">{card.bio}</small>
               </p>
             )}
             <div class="front-bottom no-print">
               <button
                 ref={frontBtn}
                 type="button"
-                class="flip-btn"
                 aria-pressed={flipped() ? "true" : "false"}
                 onClick={() => flipTo(true)}
               >
@@ -260,10 +267,10 @@ export default function Card() {
             <For each={card.links.filter((l) => l.kind === "url")}>
               {(l) => <meta itemprop="sameAs" content={l.value} />}
             </For>
-          </section>
+          </article>
 
           {/* ------------------------- BACK -------------------------- */}
-          <section
+          <article
             class="face back"
             aria-label="Business card back: contact links, QR code and save-contact"
             aria-hidden={flipped() ? "false" : "true"}
@@ -274,7 +281,7 @@ export default function Card() {
               <button
                 ref={backBtn}
                 type="button"
-                class="flip-btn flip-back"
+                class="secondary outline"
                 aria-pressed={flipped() ? "true" : "false"}
                 onClick={() => flipTo(false)}
               >
@@ -289,16 +296,18 @@ export default function Card() {
 
               <div class="back-side">
                 <div class="qr-box" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
-                <a class="vcard-btn" href={`${base}generated/contact.vcf`} download="contact.vcf">
+                <a role="button" href={`${base}generated/contact.vcf`} download="contact.vcf">
                   <Icon name="vcard" /> Save contact
                 </a>
               </div>
             </div>
-          </section>
+          </article>
         </div>
       </div>
 
-      <p class="hint no-print">Click or tap the card to flip it</p>
+      <p class="no-print">
+        <small>Click or tap the card to flip it</small>
+      </p>
     </main>
   );
 }
