@@ -21,20 +21,23 @@
   }
 
   .card {
+    transform: none !important;
     aspect-ratio: auto;
     height: 54mm;
-    transform: none !important;
     transition: none;
   }
 
   .face {
     position: relative;
     inset: auto;
-    height: 54mm;
+
     overflow: visible;
+
+    height: 54mm;
+
     backface-visibility: visible;
-    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .back {

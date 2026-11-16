@@ -50,8 +50,8 @@ body {
    Portrait: the card rotates and fills the phone screen. */
 .scene {
   container-type: inline-size;
-  perspective: 1600px;
   width: min(92vw, calc((100dvh - 4.5rem) * (85.6 / 54)), 620px);
+  perspective: 1600px;
 
   @media (orientation: portrait) {
     width: min(92vw, calc((100dvh - 5rem) * (54 / 85.6)), 400px);
@@ -70,19 +70,22 @@ body {
   --pico-form-element-spacing-horizontal: 2cqi;
   --pico-spacing: 1.4cqi;
 
-  position: relative;
-  width: 100%;
-  aspect-ratio: 85.6 / 54;
-  transform-style: preserve-3d;
-  transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.21, 1);
   cursor: pointer;
 
-  @media (orientation: portrait) {
-    aspect-ratio: 54 / 85.6;
-  }
+  position: relative;
+  transform-style: preserve-3d;
+
+  aspect-ratio: 85.6 / 54;
+  width: 100%;
+
+  transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.21, 1);
 
   &.is-flipped {
     transform: rotateY(180deg);
+  }
+
+  @media (orientation: portrait) {
+    aspect-ratio: 54 / 85.6;
   }
 }
 
@@ -91,10 +94,13 @@ body {
 .face {
   position: absolute;
   inset: 0;
-  margin: 0;
+
   overflow: clip;
-  backface-visibility: hidden;
+
+  margin: 0;
+
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .back {
@@ -123,9 +129,9 @@ body {
    the column width, so flip-back is exactly as wide as save-contact (the
    widest child defines the shrink-wrapped column). */
 .side {
-  place-self: start end;
   display: grid;
   gap: var(--pico-spacing);
+  place-self: start end;
 }
 
 // Contact buttons in a fixed 2-column grid of Pico [role=group] rows.
@@ -143,25 +149,30 @@ body {
 // Pico's [role=group] > * { flex: auto } and stays square; the open button
 // next to it takes the rest of the row width.
 [role="group"] > .copy {
+  display: inline-flex;
   flex: 0 0 auto;
+  align-items: center;
   align-self: center;
+  justify-content: center;
+
+  aspect-ratio: 1;
   width: 2.5rem;
   height: 2.5rem;
-  aspect-ratio: 1;
   padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 // ---------- utilities ----------
 .visually-hidden {
   position: absolute;
+
+  overflow: hidden;
+
   width: 1px;
   height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+
   white-space: nowrap;
+
+  clip-path: inset(50%);
 }
 
 // ---------- short landscape screens: compact the card via Pico's tokens ----------

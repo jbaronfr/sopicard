@@ -1,13 +1,13 @@
-import { HydrationScript } from "@solidjs/web";
 import type { ParentProps } from "solid-js";
+import { HydrationScript } from "@solidjs/web";
 import card from "virtual:sopicard";
 
 export default function Document(props: ParentProps) {
   const base = import.meta.env.BASE_URL;
   const title = `${card.name} — ${card.role}`;
+  const companyPart = card.company ? ` at ${card.company}` : "";
   const description =
-    card.bio ??
-    `${card.name}, ${card.role}${card.company ? ` at ${card.company}` : ""}. Digital business card.`;
+    card.bio ?? `${card.name}, ${card.role}${companyPart}. Digital business card.`;
   // Theme CSS variables generated from card.config.ts (accent, backgrounds).
   const themeVars = `:root{--accent:${card.accent};--accent-dark:${card.darkAccent};--bg-light:${card.bgLight};--bg-dark:${card.bgDark};color-scheme:light dark;}`;
 

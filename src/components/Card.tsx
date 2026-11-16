@@ -89,7 +89,7 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       ta.remove();
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    setTimeout(setCopied, 1600, false);
   };
 
   // [role=group] is Pico's joined-button pair: the two .outline buttons share

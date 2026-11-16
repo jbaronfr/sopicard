@@ -1,12 +1,14 @@
+import type { Plugin } from "vite";
+import type { CardLink } from "./src/lib/card-config";
 import fs from "node:fs";
 import path from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { createSolidBase, defineTheme } from "@kobalte/solidbase/config";
 import solid from "@solidjs/vite-plugin";
-import { defineConfig, type Plugin } from "vite";
 import QRCode from "qrcode";
+import { defineConfig } from "vite";
 import cardConfig from "./card.config";
-import type { CardLink } from "./src/lib/card-config";
 
 /* ------------------------------------------------------------------ */
 /*  Derive static assets from card.config.ts at config-load time.      */
@@ -18,13 +20,18 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const genDir = path.join(rootDir, "public", "generated");
 fs.mkdirSync(genDir, { recursive: true });
 
-const siteUrl = cardConfig.siteUrl.replace(/\/+$/, "");
+// strip trailing slashes without a backtracking-prone regex
+let siteUrl = cardConfig.siteUrl;
+while (siteUrl.endsWith("/")) siteUrl = siteUrl.slice(0, -1);
 const { person, contact, theme } = cardConfig;
 const accent = theme?.accent ?? "#4f46e5";
 const darkAccent = theme?.darkAccent ?? accent;
 const bgLight = theme?.backgroundLight ?? "#eef0f6";
 const bgDark = theme?.backgroundDark ?? "#0d0d14";
 const lang = cardConfig.lang ?? "en";
+
+const companySuffix = person.company ? ` at ${person.company}` : "";
+const personLine = `${person.name}, ${person.role}${companySuffix}`;
 
 const email = contact.email ? `${contact.email.user}@${contact.email.domain}` : undefined;
 const phoneE164 = contact.phone
@@ -63,7 +70,7 @@ const vcfLines = [
   `REV:${new Date().toISOString()}`,
   "END:VCARD",
 ].filter(Boolean);
-const vcf = vcfLines.join("\r\n") + "\r\n";
+const vcf = `${vcfLines.join("\r\n")}\r\n`;
 fs.writeFileSync(path.join(genDir, "contact.vcf"), vcf, "utf8");
 
 /* --- QR code (inline SVG, generated at build time) ------------------- */
@@ -115,9 +122,7 @@ const jsonLd = JSON.stringify({
       "@id": `${siteUrl}#page`,
       url: siteUrl,
       name: `${person.name} — ${person.role}`,
-      description:
-        person.bio ??
-        `${person.name}, ${person.role}${person.company ? ` at ${person.company}` : ""}`,
+      description: person.bio ?? personLine,
       inLanguage: lang,
       mainEntity: { "@id": `${siteUrl}#person` },
     },
@@ -219,9 +224,7 @@ export default defineConfig({
     sopicardVirtual(),
     solidBase.plugin({
       title: `${person.name} — ${person.role}`,
-      description:
-        person.bio ??
-        `${person.name}, ${person.role}${person.company ? ` at ${person.company}` : ""}. Digital business card.`,
+      description: person.bio ?? `${personLine}. Digital business card.`,
       siteUrl,
       lang,
       robots: true,
