@@ -4,7 +4,8 @@
 // handle the whole base layer — reset, typography, cards, buttons, focus
 // rings and automatic dark mode. The CSS below only covers what Pico cannot
 // express: mapping the accent onto Pico's tokens, the 3D flip with card
-// geometry, the QR backing, and printing.
+// geometry, the back layout (QR/save row, 2-column link grid, square copy
+// buttons), and printing.
 @import "@picocss/pico/css/pico.min.css";
 
 // ---------- theme ----------
@@ -113,6 +114,36 @@ body {
     width: 100%;
     height: auto;
   }
+}
+
+/* ---------- back layout ----------
+   The top row mirrors the front's .grid, so the QR sits exactly where the
+   avatar sits on the front; save-contact is pinned to the top right. */
+.save {
+  place-self: start end;
+}
+
+// Contact buttons in a fixed 2-column grid of Pico [role=group] rows.
+.links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--pico-spacing);
+
+  > * {
+    margin: 0;
+  }
+}
+
+// Copy button: fixed square with a centered icon; the open button next to it
+// takes the rest of the row width.
+.copy {
+  flex: none;
+  align-self: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: inline-flex;
+  place-items: center;
 }
 
 // ---------- utilities ----------

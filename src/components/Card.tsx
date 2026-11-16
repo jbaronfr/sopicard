@@ -106,7 +106,7 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       </button>
       <button
         type="button"
-        class="outline"
+        class="outline copy"
         onClick={copy}
         aria-label={`Copy ${props.link.label.toLowerCase()} to clipboard`}
       >
@@ -152,19 +152,22 @@ function MonogramAvatar() {
 
 export default function Card() {
   const [flipped, setFlipped] = createSignal(false);
+  // The hint is shown until the card has been flipped once.
+  const [hasFlipped, setHasFlipped] = createSignal(false);
   let frontBtn: HTMLButtonElement | undefined;
-  let backBtn: HTMLButtonElement | undefined;
+  let backFace: HTMLElement | undefined;
 
-  const flipTo = (to: boolean) => {
+  const flip = (to: boolean) => {
     setFlipped(to);
-    // Move focus to the newly revealed face's flip button for keyboard users.
-    queueMicrotask(() => (to ? backBtn : frontBtn)?.focus({ preventScroll: true }));
+    setHasFlipped(true);
+    // Move focus onto the newly revealed face for keyboard users.
+    queueMicrotask(() => (to ? backFace : frontBtn)?.focus({ preventScroll: true }));
   };
 
   // Clicking/tapping the card itself (outside buttons/links) also flips it.
   const onCardClick = (e: MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
-    setFlipped(!flipped());
+    flip(!flipped());
   };
   // Horizontal swipe flips too: left -> back, right -> front.
   let touchX = 0;
@@ -173,7 +176,7 @@ export default function Card() {
   };
   const onTouchEnd = (e: TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 40) setFlipped(dx < 0);
+    if (Math.abs(dx) > 40) flip(dx < 0);
   };
 
   const base = import.meta.env.BASE_URL;
@@ -185,7 +188,7 @@ export default function Card() {
       {card.bio && <meta itemprop="description" content={card.bio} />}
 
       <div class="scene">
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only convenience: clicking anywhere flips the card; keyboard users use the dedicated flip buttons */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer-only convenience: clicking anywhere flips the card; keyboard users use the flip button on the front face */}
         <div
           class={`card${flipped() ? " is-flipped" : ""}`}
           onClick={onCardClick}
@@ -199,6 +202,8 @@ export default function Card() {
             itemscope
             itemtype="https://schema.org/Person"
             aria-label={`Business card front: ${card.name}, ${card.role}`}
+            aria-hidden={flipped() ? "true" : "false"}
+            inert={flipped() || undefined}
           >
             <div class="grid">
               {card.avatar.type === "image" ? (
@@ -251,7 +256,7 @@ export default function Card() {
               type="button"
               class="no-print"
               aria-pressed={flipped() ? "true" : "false"}
-              onClick={() => flipTo(true)}
+              onClick={() => flip(true)}
             >
               <Icon name="flip" /> Contact &amp; links
             </button>
@@ -267,39 +272,39 @@ export default function Card() {
 
           {/* ------------------------- BACK -------------------------- */}
           <article
+            ref={backFace}
             class="face back"
+            tabindex="-1"
             aria-label="Business card back: contact links, QR code and save-contact"
             aria-hidden={flipped() ? "false" : "true"}
             inert={!flipped() || undefined}
           >
-            <button
-              ref={backBtn}
-              type="button"
-              class="secondary outline no-print"
-              aria-pressed={flipped() ? "true" : "false"}
-              onClick={() => flipTo(false)}
-            >
-              <Icon name="flip" /> Flip back
-            </button>
-
+            {/* Top row mirrors the front's .grid: QR top-left where the
+                avatar sits, save-contact pinned to the top right. */}
             <div class="grid">
-              <div>
-                <For each={card.links}>{(link) => <LinkRow link={link} />}</For>
-              </div>
-              <div>
-                <figure class="qr" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
-                <a role="button" href={`${base}generated/contact.vcf`} download="contact.vcf">
-                  <Icon name="vcard" /> Save contact
-                </a>
-              </div>
+              <figure class="qr" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
+              <a
+                role="button"
+                class="save"
+                href={`${base}generated/contact.vcf`}
+                download="contact.vcf"
+              >
+                <Icon name="vcard" /> Save contact
+              </a>
+            </div>
+
+            <div class="links">
+              <For each={card.links}>{(link) => <LinkRow link={link} />}</For>
             </div>
           </article>
         </div>
       </div>
 
-      <p class="no-print">
-        <small>Click or tap the card to flip it</small>
-      </p>
+      {!hasFlipped() && (
+        <p class="no-print">
+          <small>Click or tap the card to flip it</small>
+        </p>
+      )}
     </main>
   );
 }
