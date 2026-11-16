@@ -1,45 +1,33 @@
-// Vanilla Pico CSS: semantic HTML (<article>, <h1>, <p>, <small>, <button>,
-// <a role="button">) plus Pico's own theming custom properties handle the
-// whole base layer — reset, typography, cards, buttons, focus rings and
-// automatic dark mode. The custom CSS below only covers what Pico cannot:
-// the 3D flip, card geometry in cqi (container units), and printing.
+// Vanilla Pico CSS: semantic HTML (<main>, <article>, <h1>, <hgroup>, <p>,
+// <small>, <figure>, <button>, <a role="button">) plus Pico's own classes
+// (.grid, [role=group], .outline, .secondary) and theming custom properties
+// handle the whole base layer — reset, typography, cards, buttons, focus
+// rings and automatic dark mode. The CSS below only covers what Pico cannot
+// express: mapping the accent onto Pico's tokens, the 3D flip with card
+// geometry, the QR backing, and printing.
 @import "@picocss/pico/css/pico.min.css";
 
 // ---------- theme ----------
 // Runtime config (--accent, --bg-light/--bg-dark) arrives as custom
-// properties from Document.tsx and is mapped onto Pico's tokens. Dark values
-// must use Pico's own selector (:root:not([data-theme])) to win the cascade
-// over Pico's automatic dark theme.
+// properties from Document.tsx. Only the accent and the page background are
+// mapped onto Pico's tokens — text, muted, heading, card and shadow colors
+// are Pico's own defaults in both schemes. --pico-primary-border and
+// --pico-form-element-focus-color derive from --pico-primary-background in
+// Pico itself, so they follow the accent without being set here. The dark
+// block uses Pico's own selector (:root:not([data-theme])) to win the
+// cascade over Pico's automatic dark theme.
 :root {
   --pico-primary: var(--accent);
+  --pico-primary-background: var(--accent);
   --pico-primary-hover: color-mix(in srgb, var(--accent) 85%, #000);
+  --pico-primary-hover-background: color-mix(in srgb, var(--accent) 85%, #000);
   --pico-primary-focus: color-mix(in srgb, var(--accent) 50%, transparent);
-  --pico-form-element-focus-color: var(--accent);
   --pico-background-color: var(--bg-light);
-  --pico-color: #17171c;
-  --pico-h1-color: var(--pico-color);
-  --pico-muted-color: #5b5b66;
-  --pico-muted-border-color: rgb(23 23 28 / 10%);
-  --pico-card-background-color: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--accent) 9%, #fff),
-    #fff 45%
-  );
-  --pico-card-box-shadow: 0 30px 60px -20px rgb(0 0 0 / 40%), 0 8px 20px -8px rgb(0 0 0 / 28%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --pico-background-color: var(--bg-dark);
-    --pico-color: #f2f2f5;
-    --pico-h1-color: var(--pico-color);
-    --pico-muted-color: #a1a1ae;
-    --pico-muted-border-color: rgb(242 242 245 / 12%);
-    --pico-card-background-color: linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--accent) 9%, #17171f),
-      #17171f 45%
-    );
   }
 }
 
@@ -53,29 +41,10 @@ body {
   display: grid;
   place-items: center;
   min-height: 100dvh;
-  padding: clamp(0.5rem, 2vmin, 1.5rem);
-  overflow: clip; /* never any scrollbar */
-  background:
-    radial-gradient(
-      55% 45% at 18% 8%,
-      color-mix(in srgb, var(--accent) 16%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      45% 40% at 85% 92%,
-      color-mix(in srgb, var(--accent) 10%, transparent),
-      transparent 70%
-    ),
-    var(--pico-background-color);
+  padding: var(--pico-spacing);
 }
 
-.page {
-  display: grid;
-  justify-items: center;
-  gap: clamp(0.5rem, 2vmin, 1rem);
-}
-
-/* ---------- scene: sized from viewport units so it never collapses ----------
+/* ---------- scene + flip: the one thing Pico cannot do ----------
    Landscape: ISO 7810 ID-1 proportions (85.6 x 54), capped at 620px.
    Portrait: the card rotates and fills the phone screen. */
 .scene {
@@ -89,21 +58,23 @@ body {
 }
 
 .card {
-  // Pico's own spacing tokens expressed in card units: article padding,
-  // button padding and paragraph margins inside the card all scale with it.
-  --pico-block-spacing-vertical: 5.5cqi;
-  --pico-block-spacing-horizontal: 5.5cqi;
-  --pico-typography-spacing-vertical: 2.5cqi;
+  // Pico's own spacing tokens, expressed in card units (cqi) so the whole
+  // card scales with its width: <article> padding, button padding and
+  // paragraph margins inside the card all follow Pico's spacing system.
+  --pico-block-spacing-vertical: 4.5cqi;
+  --pico-block-spacing-horizontal: 4.5cqi;
+  --pico-typography-spacing-vertical: 2cqi;
   --pico-typography-spacing-top: 0;
-  --pico-form-element-spacing-vertical: 1.4cqi;
-  --pico-form-element-spacing-horizontal: 2.2cqi;
-  --pico-spacing: 1.6cqi;
+  --pico-form-element-spacing-vertical: 1.2cqi;
+  --pico-form-element-spacing-horizontal: 2cqi;
+  --pico-spacing: 1.4cqi;
 
   position: relative;
   width: 100%;
   aspect-ratio: 85.6 / 54;
   transform-style: preserve-3d;
   transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.21, 1);
+  cursor: pointer;
 
   @media (orientation: portrait) {
     aspect-ratio: 54 / 85.6;
@@ -114,156 +85,37 @@ body {
   }
 }
 
-/* ---------- faces ----------
-   <article> already gets Pico's card background (themed gradient), shadow
-   and padding; we only add the flip mechanics and a hairline border. */
+/* <article> already provides the card look (background, shadow, radius,
+   padding); the faces only add the flip mechanics. */
 .face {
   position: absolute;
   inset: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3cqi;
-  border: 1px solid var(--pico-muted-border-color);
-  border-radius: clamp(10px, 4.2cqi, 24px);
+  overflow: clip;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  overflow: clip;
-  cursor: pointer;
 }
 
 .back {
   transform: rotateY(180deg);
 }
 
-// ---------- front ----------
-.front-top {
-  display: flex;
-  align-items: center;
-  gap: 4cqi;
-  min-width: 0;
-}
-
-.avatar {
-  width: 17cqi;
-  height: 17cqi;
-  flex: none;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 4px 14px -4px rgb(0 0 0 / 35%);
-}
-
-.front-bottom {
-  margin-top: auto;
-}
-
-// ---------- back ----------
-.back-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2cqi;
-}
-
-.back-title {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--pico-muted-color);
-}
-
-.back-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 4cqi;
-}
-
-.links {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
-  gap: var(--pico-spacing);
-  align-content: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Narrow (portrait) cards: stack links above the QR / save-contact row. */
-@container (max-width: 480px) {
-  .links {
-    grid-template-columns: 1fr;
-  }
-
-  .back-body {
-    flex-direction: column;
-  }
-
-  .back-side {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .qr-box {
-    width: 19cqi;
-  }
-}
-
-/* Link buttons are vanilla Pico (.outline = accent border/text on
-   transparent); only the row layout and label truncation are custom. */
-.link-row {
-  display: flex;
-  gap: 1cqi;
-  min-width: 0;
-}
-
-.link-main {
-  flex: 1;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 1.2cqi;
-}
-
-.link-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.back-side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5cqi;
-}
-
-.qr-box {
-  width: 19cqi;
-  aspect-ratio: 1;
-  padding: 2.2cqi;
+// ---------- QR ----------
+// Pico has no QR component; the code is dark-on-transparent, so it always
+// needs a light, sized backing to stay scannable.
+.qr {
+  width: 20cqi;
+  padding: 2cqi;
   background: #fff; /* always light for scannability */
-  border-radius: 2cqi;
-  box-shadow: 0 4px 14px -6px rgb(0 0 0 / 35%);
 
   svg {
     display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 }
 
 // ---------- utilities ----------
-.icon {
-  width: 1em;
-  height: 1em;
-  flex: none;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -273,60 +125,19 @@ body {
   white-space: nowrap;
 }
 
-// ---------- short landscape screens: compact the card ----------
+// ---------- short landscape screens: compact the card via Pico's tokens ----------
 @media (orientation: landscape) and (height <= 500px) {
   .card {
-    --pico-block-spacing-vertical: 4cqi;
-    --pico-block-spacing-horizontal: 4cqi;
-  }
-
-  .face {
-    gap: 2cqi;
-  }
-
-  .bio {
-    display: none;
-  }
-
-  .avatar {
-    width: 13cqi;
-    height: 13cqi;
-  }
-
-  .qr-box {
-    width: 20cqi;
+    --pico-block-spacing-vertical: 3.5cqi;
+    --pico-block-spacing-horizontal: 3.5cqi;
+    --pico-spacing: 1cqi;
   }
 }
 
-// ---------- reduced motion: crossfade instead of 3D flip ----------
+// ---------- reduced motion: instant flip instead of animated 3D ----------
 @media (prefers-reduced-motion: reduce) {
-  .card,
-  .card :is(button, [role="button"]) {
+  .card {
     transition: none;
-  }
-
-  .face {
-    transition: opacity 0.2s ease;
-  }
-
-  .back {
-    transform: none;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .card.is-flipped {
-    transform: none;
-
-    .front {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .back {
-      opacity: 1;
-      pointer-events: auto;
-    }
   }
 }
 
@@ -339,16 +150,11 @@ body {
     margin: 0;
   }
 
-  body {
+  body,
+  main {
     display: block;
     min-height: 0;
     padding: 0;
-    overflow: visible;
-    background: #fff;
-  }
-
-  .page {
-    display: block;
   }
 
   .scene {
@@ -367,9 +173,7 @@ body {
     position: relative;
     inset: auto;
     height: 54mm;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
+    overflow: visible;
     backface-visibility: visible;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
@@ -377,8 +181,6 @@ body {
 
   .back {
     transform: none;
-    opacity: 1;
-    pointer-events: auto;
     break-before: page;
   }
 

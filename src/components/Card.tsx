@@ -25,11 +25,13 @@ const ICONS: Record<string, string> = {
   flip: '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
 };
 
+/* Icons are sized with width/height attributes (1em), so no CSS is needed. */
 function Icon(props: { name: string }) {
   return (
     <svg
-      class="icon"
       viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
       fill="none"
       stroke="currentColor"
       stroke-width="2"
@@ -90,16 +92,17 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
     setTimeout(() => setCopied(false), 1600);
   };
 
+  // [role=group] is Pico's joined-button pair: the two .outline buttons share
+  // a single border and split the row width.
   return (
-    <li class="link-row">
+    <div role="group">
       <button
         type="button"
-        class="outline link-main"
+        class="outline"
         onClick={open}
         aria-label={`${props.link.label} — open`}
       >
-        <Icon name={props.link.icon} />
-        <span class="link-label">{props.link.label}</span>
+        <Icon name={props.link.icon} /> {props.link.label}
       </button>
       <button
         type="button"
@@ -112,15 +115,16 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       <span role="status" class="visually-hidden">
         {copied() ? `${props.link.label} copied to clipboard` : ""}
       </span>
-    </li>
+    </div>
   );
 }
 
 function MonogramAvatar() {
   return (
     <svg
-      class="avatar"
       viewBox="0 0 96 96"
+      width="96"
+      height="96"
       role="img"
       aria-label={`Portrait monogram of ${card.name}`}
     >
@@ -175,7 +179,7 @@ export default function Card() {
   const base = import.meta.env.BASE_URL;
 
   return (
-    <main class="page" itemscope itemtype="https://schema.org/ProfilePage">
+    <main itemscope itemtype="https://schema.org/ProfilePage">
       <meta itemprop="url" content={card.siteUrl} />
       <meta itemprop="name" content={`${card.name} — ${card.role}`} />
       {card.bio && <meta itemprop="description" content={card.bio} />}
@@ -196,10 +200,9 @@ export default function Card() {
             itemtype="https://schema.org/Person"
             aria-label={`Business card front: ${card.name}, ${card.role}`}
           >
-            <div class="front-top">
+            <div class="grid">
               {card.avatar.type === "image" ? (
                 <img
-                  class="avatar"
                   src={`${base}${card.avatar.src.replace(/^\//, "")}`}
                   alt={card.avatar.alt}
                   width="96"
@@ -210,55 +213,48 @@ export default function Card() {
               ) : (
                 <MonogramAvatar />
               )}
-              <div>
+              <hgroup>
                 <h1 itemprop="name">{card.name}</h1>
                 <p>
-                  <small>
-                    <span itemprop="jobTitle">{card.role}</span>
-                    {card.company && (
-                      <>
-                        {" · "}
-                        <span
-                          itemprop="worksFor"
-                          itemscope
-                          itemtype="https://schema.org/Organization"
-                        >
-                          <span itemprop="name">{card.company}</span>
-                        </span>
-                      </>
-                    )}
-                  </small>
-                </p>
-                {card.location && (
-                  <p>
-                    <small>
+                  <span itemprop="jobTitle">{card.role}</span>
+                  {card.company && (
+                    <>
+                      {" · "}
                       <span
-                        itemprop="address"
+                        itemprop="worksFor"
                         itemscope
-                        itemtype="https://schema.org/PostalAddress"
+                        itemtype="https://schema.org/Organization"
                       >
-                        <span itemprop="addressLocality">{card.location}</span>
+                        <span itemprop="name">{card.company}</span>
                       </span>
-                    </small>
-                  </p>
-                )}
-              </div>
+                    </>
+                  )}
+                </p>
+              </hgroup>
             </div>
+            {card.location && (
+              <p>
+                <small>
+                  <span itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+                    <span itemprop="addressLocality">{card.location}</span>
+                  </span>
+                </small>
+              </p>
+            )}
             {card.bio && (
-              <p class="bio">
+              <p>
                 <small itemprop="description">{card.bio}</small>
               </p>
             )}
-            <div class="front-bottom no-print">
-              <button
-                ref={frontBtn}
-                type="button"
-                aria-pressed={flipped() ? "true" : "false"}
-                onClick={() => flipTo(true)}
-              >
-                <Icon name="flip" /> Contact &amp; links
-              </button>
-            </div>
+            <button
+              ref={frontBtn}
+              type="button"
+              class="no-print"
+              aria-pressed={flipped() ? "true" : "false"}
+              onClick={() => flipTo(true)}
+            >
+              <Icon name="flip" /> Contact &amp; links
+            </button>
             {/* monogram avatar has no src, expose an image URL for microdata */}
             {card.avatar.type === "monogram" && (
               <meta itemprop="image" content={`${card.siteUrl}/generated/og.svg`} />
@@ -276,26 +272,22 @@ export default function Card() {
             aria-hidden={flipped() ? "false" : "true"}
             inert={!flipped() || undefined}
           >
-            <div class="back-head no-print">
-              <span class="back-title">Get in touch</span>
-              <button
-                ref={backBtn}
-                type="button"
-                class="secondary outline"
-                aria-pressed={flipped() ? "true" : "false"}
-                onClick={() => flipTo(false)}
-              >
-                <Icon name="flip" /> Flip back
-              </button>
-            </div>
+            <button
+              ref={backBtn}
+              type="button"
+              class="secondary outline no-print"
+              aria-pressed={flipped() ? "true" : "false"}
+              onClick={() => flipTo(false)}
+            >
+              <Icon name="flip" /> Flip back
+            </button>
 
-            <div class="back-body">
-              <ul class="links">
+            <div class="grid">
+              <div>
                 <For each={card.links}>{(link) => <LinkRow link={link} />}</For>
-              </ul>
-
-              <div class="back-side">
-                <div class="qr-box" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
+              </div>
+              <div>
+                <figure class="qr" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
                 <a role="button" href={`${base}generated/contact.vcf`} download="contact.vcf">
                   <Icon name="vcard" /> Save contact
                 </a>
