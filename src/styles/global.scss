@@ -4,8 +4,8 @@
 // handle the whole base layer — reset, typography, cards, buttons, focus
 // rings and automatic dark mode. The CSS below only covers what Pico cannot
 // express: mapping the accent onto Pico's tokens, the 3D flip with card
-// geometry, the back layout (QR/save row, 2-column link grid, square copy
-// buttons), and printing.
+// geometry, and the back layout (QR/save row, 2-column link grid, square
+// copy buttons). Printing lives in print.scss.
 @import "@picocss/pico/css/pico.min.css";
 
 // ---------- theme ----------
@@ -177,53 +177,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .card {
     transition: none;
-  }
-}
-
-/* ---------- print: real business card, both sides on 2 pages ----------
-   ISO 7810 ID-1: 85.6mm x 54mm, no margins. Front on page 1, back on
-   page 2. Colors kept exact for brand accuracy. */
-@media print {
-  @page {
-    size: 85.6mm 54mm;
-    margin: 0;
-  }
-
-  body,
-  main {
-    display: block;
-    min-height: 0;
-    padding: 0;
-  }
-
-  .scene {
-    width: 85.6mm;
-    perspective: none;
-  }
-
-  .card {
-    aspect-ratio: auto;
-    height: 54mm;
-    transform: none !important;
-    transition: none;
-  }
-
-  .face {
-    position: relative;
-    inset: auto;
-    height: 54mm;
-    overflow: visible;
-    backface-visibility: visible;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-
-  .back {
-    transform: none;
-    break-before: page;
-  }
-
-  .no-print {
-    display: none !important;
   }
 }

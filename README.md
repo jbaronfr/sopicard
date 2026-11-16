@@ -99,7 +99,8 @@ Prettier `--write`).
 │   ├── app.tsx             ← router + SolidBaseRoot
 │   ├── components/Card.tsx ← the flip card (front/back, links, QR, vCard)
 │   ├── routes/index.tsx    ← the page
-│   └── styles/global.css   ← Pico overrides, flip, responsive, print
+│   └── styles/global.css   ← Pico overrides, flip, responsive
+│       └── print.scss      ← @media print: 2-page ID-1 output (inlined after global)
 └── .github/workflows/deploy.yml
 ```
 

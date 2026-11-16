@@ -1,0 +1,48 @@
+/* ---------- print: real business card, both sides on 2 pages ----------
+   ISO 7810 ID-1: 85.6mm x 54mm, no margins. Front on page 1, back on
+   page 2. Colors kept exact for brand accuracy. Inlined as its own
+   <style> after global.scss in theme/Layout.tsx so it wins the cascade. */
+@media print {
+  @page {
+    size: 85.6mm 54mm;
+    margin: 0;
+  }
+
+  body,
+  main {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .scene {
+    width: 85.6mm;
+    perspective: none;
+  }
+
+  .card {
+    aspect-ratio: auto;
+    height: 54mm;
+    transform: none !important;
+    transition: none;
+  }
+
+  .face {
+    position: relative;
+    inset: auto;
+    height: 54mm;
+    overflow: visible;
+    backface-visibility: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .back {
+    transform: none;
+    break-before: page;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
