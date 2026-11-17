@@ -79,6 +79,32 @@
     border-left: 0.3mm dashed rgb(0 0 0 / 30%);
   }
 
+  /* Print layout of the back: QR on the left, the contact list on the right
+     as full-width rows (the copy buttons are hidden in print), so the real
+     values fit on a single line each. Each row is a real anchor during the
+     print window (see the printing signal in Card.tsx) — the print pipeline
+     turns it into a clickable PDF link annotation. Without JS the row stays
+     the label-only button from the prerendered HTML. */
+  .face.back {
+    display: flex;
+    gap: 2.5mm;
+  }
+
+  .face.back > .grid {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  .back .side {
+    display: none;
+  }
+
+  .links {
+    grid-template-columns: 1fr;
+    flex: 1;
+    align-content: start;
+  }
+
   /* Everything sized in cqi on screen is re-sized in absolute mm for print
      (1cqi of a card's ~79mm content box is ~0.79mm): QR, avatar, copy button. */
   .qr {

@@ -1,4 +1,4 @@
-import { createSignal, For, onSettled } from "solid-js";
+import { createSignal, flush, For, onSettled } from "solid-js";
 import card from "virtual:sopicard";
 
 /* Inline SVG icon set — zero network requests. stroke-based (lucide-style paths). */
@@ -66,6 +66,38 @@ function displayOf(link: (typeof card.links)[number]): string {
   }
 }
 
+/* Print-mode signal: true only while the browser is printing (preview or job).
+ * LinkRow swaps its button for a real anchor (href + display value) only
+ * then, so neither the prerendered HTML nor the idle live DOM ever contains
+ * the contact targets — the anti-scraping guarantee of targetOf/displayOf is
+ * preserved, while the printout still gets clickable PDF links.
+ *
+ * Every handler flushes synchronously: Solid 2.0 batches signal-driven DOM
+ * updates into a microtask (the scheduler's queueMicrotask(flush)), but
+ * Chrome's print dialog pumps a nested message loop that never drains the
+ * page's microtask queue. A plain setPrinting(true) in beforeprint would
+ * therefore land only after the dialog closes — the preview and the printout
+ * would keep showing labels. flush() puts the values into the DOM before the
+ * dialog (and any render behind it) can snapshot it. */
+const [printing, setPrinting] = createSignal(false);
+if (typeof window !== "undefined") {
+  const printMq = window.matchMedia?.("print");
+  const sync = () => {
+    setPrinting(printMq?.matches ?? false);
+    flush();
+  };
+  sync();
+  printMq?.addEventListener?.("change", sync);
+  window.addEventListener("beforeprint", () => {
+    setPrinting(true);
+    flush();
+  });
+  window.addEventListener("afterprint", () => {
+    setPrinting(false);
+    flush();
+  });
+}
+
 function LinkRow(props: { link: (typeof card.links)[number] }) {
   const [copied, setCopied] = createSignal(false);
 
@@ -101,16 +133,29 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
 
   // [role=group] is Pico's joined-button pair: the two .outline buttons share
   // a single border and split the row width.
+  //
+  // While printing, the open-button swaps for a real anchor carrying the
+  // assembled target: print pipelines turn rendered anchors into clickable
+  // PDF link annotations, so the values on the printout open the mailer /
+  // browser. The anchor exists only inside the beforeprint → afterprint
+  // window (see the printing signal above), so neither the prerendered HTML
+  // nor the idle live DOM ever contains a mailto:/tel: link.
   return (
     <div role="group">
-      <button
-        type="button"
-        class="outline"
-        onClick={open}
-        aria-label={`${props.link.label} — open`}
-      >
-        <Icon name={props.link.icon} /> {props.link.label}
-      </button>
+      {printing() ? (
+        <a role="button" class="outline" href={targetOf(props.link)}>
+          <Icon name={props.link.icon} /> {displayOf(props.link)}
+        </a>
+      ) : (
+        <button
+          type="button"
+          class="outline"
+          onClick={open}
+          aria-label={`${props.link.label} — open`}
+        >
+          <Icon name={props.link.icon} /> {props.link.label}
+        </button>
+      )}
       <button
         type="button"
         class="outline copy no-print"

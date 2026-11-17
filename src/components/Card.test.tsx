@@ -85,6 +85,35 @@ it("copies assembled contact data to the clipboard and announces it", async () =
   expect(emailStatus).toHaveTextContent("");
 });
 
+it("swaps rows to real clickable links during beforeprint, then restores them", async () => {
+  // Chrome's print dialog pumps a nested message loop that never drains the
+  // page's microtask queue, so Solid's microtask-scheduled DOM updates never
+  // land while it is open. The beforeprint handler must therefore flush
+  // synchronously — asserted here with NO await between the event and the
+  // read, mirroring the frozen-loop conditions of a real print dialog.
+  const user = userEvent.setup();
+  const { container } = render(() => <Card />);
+  await flipToBack(user);
+
+  expect(container.querySelector('a[href^="mailto:"], a[href^="tel:"]')).toBeNull();
+
+  window.dispatchEvent(new Event("beforeprint"));
+  // anchors are in the DOM synchronously, with the assembled targets
+  const email = container.querySelector('a[href="mailto:test@example.com"]');
+  expect(email).not.toBeNull();
+  expect(email!.textContent).toContain("test@example.com");
+  expect(container.querySelector('a[href="tel:+447700900123"]')!.textContent).toContain(
+    "+44 77 00 90 01 23",
+  );
+  expect(container.querySelector('a[href="https://example.com"]')).not.toBeNull();
+  // the interactive buttons are gone for the print render
+  expect(screen.queryByRole("button", { name: /email — open/i })).toBeNull();
+
+  window.dispatchEvent(new Event("afterprint"));
+  expect(container.querySelector('a[href^="mailto:"], a[href^="tel:"]')).toBeNull();
+  expect(screen.getByRole("button", { name: /email — open/i })).toBeInTheDocument();
+});
+
 it("links the vCard download to the generated file", async () => {
   const user = userEvent.setup();
   render(() => <Card />);
