@@ -7,6 +7,8 @@ deployable in one click as a GitHub template. Built with **SolidBase (SolidJS)**
 ![Mistral](https://builtwithvibes.io/badge/light/mistral)
 ![stack](https://img.shields.io/badge/stack-SolidBase%20%2B%20Pico%20CSS-4f46e5)
 
+**Demo — live card:** https://jbaronfr.github.io/sopicard/
+
 ## Use this template
 
 Click **Use this template** on GitHub, or open:
