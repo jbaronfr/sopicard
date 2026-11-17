@@ -29,7 +29,8 @@ Then:
 
 ## Run locally
 
-Requires Node 20.19+ or 22.12+ (Vite 8); CI builds with Node 23.
+Requires Node 24+ (its bundled npm 11 matches the committed lockfile; older Node lines
+ship npm 10, whose stricter peer resolution rejects it); CI builds with Node 24.
 
 ```bash
 npm install
