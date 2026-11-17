@@ -232,6 +232,12 @@ export default defineConfig({
     sopicardVirtual(),
     solidBase.plugin({
       title: `${person.name} — ${person.role}`,
+      // SolidBase composes `${title} - ${titleTemplate ?? config().title}` when
+      // no template is set, which duplicates the title ("Ada — Engineer -
+      // Ada — Engineer") into <title> — and Chrome uses <title> as the
+      // suggested PDF filename. ":title" is the placeholder form: the title
+      // becomes the whole <title>, verbatim, no suffix.
+      titleTemplate: ":title",
       description: person.bio ?? `${personLine}. Digital business card.`,
       siteUrl,
       lang,
