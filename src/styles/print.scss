@@ -1,11 +1,25 @@
-/* ---------- print: real business card, both sides on 2 pages ----------
-   ISO 7810 ID-1: 85.6mm x 54mm, no margins. Front on page 1, back on
-   page 2. Colors kept exact for brand accuracy. Inlined as its own
-   <style> after global.scss in theme/Layout.tsx so it wins the cascade. */
+/* ---------- print: both sides side by side on a single page ----------
+   The page box IS the print sheet: one strip of exactly 2 x ISO 7810 ID-1
+   cards (171.2mm x 54mm), no margins — front left, back right, cut along the
+   dashed middle line. Because the page box is the strip itself, the print
+   dialog's "pages per sheet" (2/4/6/9-up) tiles several strips per A4 sheet,
+   and picking the 171.2 x 54mm paper size prints one strip at 100%.
+   All print sizing is absolute mm on purpose: container-query units (cqi)
+   resolve against different containers across browsers in paged media, which
+   made the back overflow its 54mm face. Colors kept exact for brand accuracy.
+   Inlined as its own <style> after global.scss in theme/Layout.tsx so it wins
+   the cascade. */
 @media print {
   @page {
-    size: 85.6mm 54mm;
+    size: 171.2mm 54mm;
     margin: 0;
+  }
+
+  /* Type is rem-based, so the root font must shrink to card scale: one
+     85.6mm-wide card is ~324px at 100% zoom and pairs with a ~19-20px root
+     font on screen — 2.75mm keeps those proportions on paper. */
+  :root {
+    font-size: 2.75mm;
   }
 
   body,
@@ -16,14 +30,29 @@
   }
 
   .scene {
-    width: 85.6mm;
+    width: 171.2mm;
     perspective: none;
   }
 
   .card {
+    /* Spacing tokens in absolute mm so nothing depends on cqi resolution. */
+    --pico-block-spacing-vertical: 3mm;
+    --pico-block-spacing-horizontal: 3mm;
+    --pico-typography-spacing-vertical: 1.7mm;
+    --pico-typography-spacing-top: 0;
+    --pico-form-element-spacing-vertical: 1mm;
+    --pico-form-element-spacing-horizontal: 1.7mm;
+    --pico-spacing: 1.2mm;
+
     transform: none !important;
+
+    display: flex;
+    break-inside: avoid;
+
     aspect-ratio: auto;
+    width: 171.2mm;
     height: 54mm;
+
     transition: none;
   }
 
@@ -31,8 +60,11 @@
     position: relative;
     inset: auto;
 
-    overflow: visible;
+    /* one page, guaranteed: nothing may spill onto a second sheet */
+    overflow: hidden;
+    flex: 0 0 85.6mm;
 
+    width: 85.6mm;
     height: 54mm;
 
     backface-visibility: visible;
@@ -42,7 +74,27 @@
 
   .back {
     transform: none;
-    break-before: page;
+
+    /* cut guide down the middle of the strip */
+    border-left: 0.3mm dashed rgb(0 0 0 / 30%);
+  }
+
+  /* Everything sized in cqi on screen is re-sized in absolute mm for print
+     (1cqi of a card's ~79mm content box is ~0.79mm): QR, avatar, copy button. */
+  .qr {
+    width: 16mm;
+    padding: 1.6mm;
+  }
+
+  .face .grid > img,
+  .face .grid > svg {
+    width: 12.5mm;
+    height: 12.5mm;
+  }
+
+  [role="group"] > .copy {
+    width: 5.5mm;
+    height: 5.5mm;
   }
 
   .no-print {

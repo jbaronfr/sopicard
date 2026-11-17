@@ -113,7 +113,7 @@ function LinkRow(props: { link: (typeof card.links)[number] }) {
       </button>
       <button
         type="button"
-        class="outline copy"
+        class="outline copy no-print"
         onClick={copy}
         aria-label={`Copy ${props.link.label.toLowerCase()} to clipboard`}
       >
@@ -289,7 +289,12 @@ export default function Card() {
             <div class="grid">
               <figure class="qr" role="img" aria-label={card.qrLabel} innerHTML={card.qrSvg} />
               <div class="side">
-                <a role="button" href={`${base}generated/contact.vcf`} download="contact.vcf">
+                <a
+                  role="button"
+                  href={`${base}generated/contact.vcf`}
+                  download="contact.vcf"
+                  class="no-print"
+                >
                   <Icon name="vcard" /> Save contact
                 </a>
                 <button
